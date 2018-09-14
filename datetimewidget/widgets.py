@@ -100,33 +100,47 @@ toJavascript_re = re.compile(r'(?<!\w)(' + '|'.join(dateConversiontoJavascript.k
 
 BOOTSTRAP_INPUT_TEMPLATE = {
     2: """
-       <div id="%(id)s"  class="controls input-append date">
+       <div id="%(id)s" class="input-group date" data-date-today-btn="true">
            %(rendered_widget)s
-           %(clear_button)s
-           <span class="add-on"><i class="icon-th"></i></span>
+           <span class="input-group-btn">
+               %(clear_button)s
+               %(main_button)s
+           </span>
        </div>
        <script type="text/javascript">
-           $("#%(id)s").datetimepicker({%(options)s});
+            require(['main'], function() {
+                require(['jquery', 'modules/datetime-picker'], function($, DateTimePicker) {
+                    new DateTimePicker($("#%(id)s"), {%(options)s});
+                });
+            });
        </script>
        """,
     3: """
-       <div id="%(id)s" class="input-group date">
+       <div id="%(id)s" class="input-group date" data-date-today-btn="true">
            %(rendered_widget)s
-           %(clear_button)s
-           <span class="input-group-addon"><span class="glyphicon %(glyphicon)s"></span></span>
+           <span class="input-group-btn">
+               %(clear_button)s
+               %(main_button)s
+           </span>
        </div>
        <script type="text/javascript">
-           $("#%(id)s").datetimepicker({%(options)s}).find('input').addClass("form-control");
+            require(['main'], function() {
+                require(['jquery', 'modules/datetime-picker'], function($, DateTimePicker) {
+                    new DateTimePicker($("#%(id)s"), {%(options)s});
+                });
+            });
        </script>
        """
        }
 
-CLEAR_BTN_TEMPLATE = {2: """<span class="add-on"><i class="icon-remove"></i></span>""",
-                      3: """<span class="input-group-addon"><span class="glyphicon glyphicon-remove"></span></span>"""}
+CLEAR_BTN_TEMPLATE = {2: """""",
+                      3: ""}
+MAIN_BTN_TEMPLATE = """<button class="btn btn-default" type="button"><i class="fa %(glyphicon)s"></i></button>"""
 
 
 quoted_options = set([
     'format',
+    'formatViewType',
     'startDate',
     'endDate',
     'startView',
@@ -244,7 +258,7 @@ class PickerWidgetMixin(object):
                     id=id,
                     rendered_widget=rendered_widget,
                     clear_button=CLEAR_BTN_TEMPLATE[self.bootstrap_version] if clearBtn else "",
-                    glyphicon=self.glyphicon,
+                    main_button=MAIN_BTN_TEMPLATE % dict(glyphicon=self.glyphicon),
                     options=js_options
                     )
         )
@@ -274,7 +288,7 @@ class DateTimeWidget(PickerWidgetMixin, DateTimeInput):
     """
 
     format_name = 'DATETIME_INPUT_FORMATS'
-    glyphicon = 'glyphicon-th'
+    glyphicon = 'fa-th'
 
     def __init__(self, attrs=None, options=None, usel10n=None, bootstrap_version=None):
 
@@ -282,7 +296,7 @@ class DateTimeWidget(PickerWidgetMixin, DateTimeInput):
             options = {}
 
         # Set the default options to show only the datepicker object
-        options['format'] = options.get('format', 'dd/mm/yyyy hh:ii')
+        options['format'] = options.get('format', 'yyyy-mm-dd hh:ii')
 
         super(DateTimeWidget, self).__init__(attrs, options, usel10n, bootstrap_version)
 
@@ -294,7 +308,7 @@ class DateWidget(PickerWidgetMixin, DateInput):
     """
 
     format_name = 'DATE_INPUT_FORMATS'
-    glyphicon = 'glyphicon-calendar'
+    glyphicon = 'fa-calendar'
 
     def __init__(self, attrs=None, options=None, usel10n=None, bootstrap_version=None):
 
@@ -304,7 +318,7 @@ class DateWidget(PickerWidgetMixin, DateInput):
         # Set the default options to show only the datepicker object
         options['startView'] = options.get('startView', 2)
         options['minView'] = options.get('minView', 2)
-        options['format'] = options.get('format', 'dd/mm/yyyy')
+        options['format'] = options.get('format', 'yyyy-mm-dd')
 
         super(DateWidget, self).__init__(attrs, options, usel10n, bootstrap_version)
 
@@ -316,7 +330,7 @@ class TimeWidget(PickerWidgetMixin, TimeInput):
     """
 
     format_name = 'TIME_INPUT_FORMATS'
-    glyphicon = 'glyphicon-time'
+    glyphicon = 'fa-clock-o'
 
     def __init__(self, attrs=None, options=None, usel10n=None, bootstrap_version=None):
 
@@ -324,9 +338,11 @@ class TimeWidget(PickerWidgetMixin, TimeInput):
             options = {}
 
         # Set the default options to show only the timepicker object
+        options['formatViewType'] = options.get('formatViewType', 'time')
         options['startView'] = options.get('startView', 1)
         options['minView'] = options.get('minView', 0)
         options['maxView'] = options.get('maxView', 1)
+        options['pickerPosition'] = options.get('bottom-left', "bottom-left")
         options['format'] = options.get('format', 'hh:ii')
 
         super(TimeWidget, self).__init__(attrs, options, usel10n, bootstrap_version)
